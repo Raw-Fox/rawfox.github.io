@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geowin — Job Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --bg2: #181c27;
+  --bg3: #1e2335;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e8eaf0;
+  --text2: #8b90a0;
+  --text3: #555c70;
+  --accent: #4f8ef7;
+  --accent2: #3a6fd4;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
+  --teal: #2dd4bf;
+  --ra: #4f8ef7;
+  --rb: #a78bfa;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* Layout */
+.topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.logo { font-weight: 600; font-size: 15px; color: var(--text); letter-spacing: -0.3px; }
+.logo span { color: var(--accent); }
+.topbar-right { display: flex; gap: 8px; }
+.main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+/* Buttons */
+btn, .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border2); background: transparent; color: var(--text); font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn:hover { background: var(--bg3); border-color: var(--border2); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-danger { color: var(--red); border-color: rgba(248,113,113,0.3); }
+.btn-danger:hover { background: rgba(248,113,113,0.1); }
+.btn-ghost { border-color: transparent; color: var(--text2); }
+.btn-ghost:hover { background: var(--bg3); color: var(--text); border-color: var(--border); }
+
+/* Stats row */
+.stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
+.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+.stat-label { font-size: 11px; color: var(--text2); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 600; letter-spacing: -1px; }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; width: fit-content; flex-wrap: wrap; }
+.tab { padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: transparent; transition: all 0.15s; white-space: nowrap; }
+.tab:hover { color: var(--text); }
+.tab.active { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+
+/* Filters */
+.filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.filters input, .filters select { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 13px; padding: 7px 12px; outline: none; transition: border 0.15s; }
+.filters input:focus, .filters select:focus { border-color: var(--accent); }
+.filters input { min-width: 220px; }
+.filters select { min-width: 140px; }
+.filters select option { background: var(--bg2); }
+
+/* Table */
+.table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead { background: var(--bg3); }
+th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 500; color: var(--text2); letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; border-bottom: 1px solid var(--border); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.1s; }
+tbody tr:hover { background: rgba(255,255,255,0.025); }
+.td-company { font-weight: 600; white-space: nowrap; }
+.td-role { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td-jobid { font-family: var(--mono); font-size: 11px; color: var(--text2); white-space: nowrap; }
+.td-muted { color: var(--text2); font-size: 12px; }
+.td-actions { white-space: nowrap; display: flex; gap: 4px; }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+.badge-A { background: rgba(79,142,247,0.15); color: var(--ra); border: 1px solid rgba(79,142,247,0.25); }
+.badge-B { background: rgba(167,139,250,0.15); color: var(--rb); border: 1px solid rgba(167,139,250,0.25); }
+.badge-Applied { background: rgba(79,142,247,0.12); color: #7aaaf7; border: 1px solid rgba(79,142,247,0.2); }
+.badge-Screening { background: rgba(167,139,250,0.12); color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
+.badge-Interview { background: rgba(251,191,36,0.12); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
+.badge-Offer { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+.badge-Rejected { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+.badge-Withdrawn { background: rgba(139,144,160,0.1); color: var(--text2); border: 1px solid var(--border); }
+.badge-Awaiting { background: rgba(251,191,36,0.12); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
+.badge-RefSent { background: rgba(45,212,191,0.12); color: var(--teal); border: 1px solid rgba(45,212,191,0.2); }
+.badge-RefReceived { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+.badge-NoResp { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+.overdue { color: var(--red); font-weight: 600; }
+.link-cell a { color: var(--accent); text-decoration: none; }
+.link-cell a:hover { text-decoration: underline; }
+
+/* Empty */
+.empty-state { text-align: center; padding: 60px 24px; }
+.empty-icon { width: 48px; height: 48px; background: var(--bg3); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 22px; }
+.empty-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: var(--text2); margin-bottom: 18px; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal { background: #1a1f2e; border: 1px solid var(--border2); border-radius: 16px; width: 100%; max-width: 580px; max-height: 92vh; overflow-y: auto; padding: 24px; }
+.modal-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.modal-sub { font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+.type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.type-btn { padding: 11px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.15s; }
+.type-btn:hover { border-color: var(--border2); color: var(--text); }
+.type-btn.active-A { background: rgba(79,142,247,0.15); border-color: rgba(79,142,247,0.4); color: var(--ra); }
+.type-btn.active-B { background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.4); color: var(--rb); }
+.form-section { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 18px 0 12px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.form-col { display: flex; flex-direction: column; gap: 5px; }
+.form-col label { font-size: 11px; font-weight: 500; color: var(--text2); letter-spacing: 0.02em; }
+.form-col input, .form-col select { background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 9px 12px; outline: none; transition: border 0.15s; width: 100%; }
+.form-col input:focus, .form-col select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,0.12); }
+.form-col select option { background: #1a1f2e; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; padding-top: 16px; margin-top: 8px; border-top: 1px solid var(--border); }
+
+/* Progress bar (response rate) */
+.progress-bar { height: 4px; background: var(--bg3); border-radius: 99px; margin-top: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; background: var(--green); transition: width 0.4s ease; }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .topbar { padding: 0 16px; }
+  .main { padding: 14px; }
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+  .form-row { grid-template-columns: 1fr; }
+  .filters input { min-width: 0; width: 100%; }
+  .filters select { min-width: 0; }
+  .tabs { width: 100%; }
+  .tab { font-size: 11px; padding: 5px 10px; }
+}
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 18px; font-size: 13px; color: var(--text); z-index: 9999; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Job<span>Track</span></div>
+    <span style="font-size:11px;color:var(--text3);border:1px solid var(--border);padding:2px 8px;border-radius:99px;">Geowin B Varghese</span>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+    <button class="btn btn-primary btn-sm" onclick="openModal()">+ Add application</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="stats-row" id="statsRow"></div>
+
+  <div class="tabs" id="tabsRow">
+    <button class="tab active" data-tab="all" onclick="setTab(this)">All</button>
+    <button class="tab" data-tab="direct" onclick="setTab(this)">Resume A — Direct</button>
+    <button class="tab" data-tab="referral" onclick="setTab(this)">Resume B — Referral</button>
+    <button class="tab" data-tab="waiting" onclick="setTab(this)">Awaiting referral</button>
+    <button class="tab" data-tab="followup" onclick="setTab(this)">Follow-up due</button>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="Search company, role, job ID, contact..." oninput="render()">
+    <select id="filterStatus" onchange="render()">
+      <option value="">All statuses</option>
+      <option>Applied</option><option>Screening</option><option>Interview</option>
+      <option>Offer</option><option>Rejected</option><option>Withdrawn</option>
+      <option>Awaiting referral</option><option>Referral sent</option><option>Referral received</option>
+    </select>
+    <select id="filterPortal" onchange="render()">
+      <option value="">All portals</option>
+      <option>LinkedIn</option><option>Indeed</option><option>Naukri</option>
+      <option>Dice</option><option>Company Website</option><option>Referral</option><option>Other</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear filters</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div id="emptyState" style="display:none;">
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">No applications yet</div>
+        <div class="empty-sub">Start tracking your job search — add your first application below.</div>
+        <button class="btn btn-primary" onclick="openModal()">+ Add first application</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;" onclick="closeModalBg(event)">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-title" id="modalTitle">Add application</div>
+  <div class="modal-sub">Fields marked * are required</div>
+
+  <div class="type-toggle">
+    <button class="type-btn active-A" id="typeA" onclick="setType('A')">
+      <span style="margin-right:6px;" class="badge badge-A">A</span> Direct application
+    </button>
+    <button class="type-btn" id="typeB" onclick="setType('B')">
+      <span style="margin-right:6px;" class="badge badge-B">B</span> Referral
+    </button>
+  </div>
+
+  <div class="form-section">Job details</div>
+  <div class="form-row">
+    <div class="form-col"><label>Company *</label><input id="fCompany" placeholder="e.g. Flipkart"></div>
+    <div class="form-col"><label>Job title *</label><input id="fRole" placeholder="e.g. Data Analyst"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-col"><label>Job ID / Req. no.</label><input id="fJobId" placeholder="e.g. JR-20341"></div>
+    <div class="form-col"><label>Job URL</label><input id="fUrl" placeholder="https://..."></div>
+  </div>
+  <div class="form-row">
+    <div class="form-col"><label>Portal / source</label>
+      <select id="fPortal">
+        <option>LinkedIn</option><option>Indeed</option><option>Naukri</option>
+        <option>Dice</option><option>Company Website</option><option>Referral</option><option>Other</option>
+      </select>
+    </div>
+    <div class="form-col"><label>Salary (LPA)</label><input id="fSalary" type="number" placeholder="e.g. 14"></div>
+  </div>
+
+  <div class="form-section">Application status</div>
+  <div class="form-row">
+    <div class="form-col"><label>Date applied</label><input type="date" id="fDate"></div>
+    <div class="form-col"><label>Status</label>
+      <select id="fStatus">
+        <option>Applied</option><option>Screening</option><option>Interview</option>
+        <option>Offer</option><option>Rejected</option><option>Withdrawn</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-col"><label>Follow-up date</label><input type="date" id="fFollowup"></div>
+    <div class="form-col"><label>Notes</label><input id="fNotes" placeholder="Round, recruiter name, feedback..."></div>
+  </div>
+
+  <div id="referralSection" style="display:none;">
+    <div class="form-section">Referral details</div>
+    <div class="form-row">
+      <div class="form-col"><label>Contact name (LinkedIn)</label><input id="fContact" placeholder="e.g. Priya Sharma"></div>
+      <div class="form-col"><label>Their designation</label><input id="fDesignation" placeholder="e.g. Senior DA at Flipkart"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-col"><label>LinkedIn profile URL</label><input id="fLinkedIn" placeholder="linkedin.com/in/..."></div>
+      <div class="form-col"><label>Message sent date</label><input type="date" id="fMsgDate"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-col"><label>Referral status</label>
+        <select id="fRefStatus">
+          <option>Awaiting referral</option><option>Referral sent</option>
+          <option>Referral received</option><option>No response</option><option>Declined</option>
+        </select>
+      </div>
+      <div class="form-col"><label>Referred by (name)</label><input id="fReferredBy" placeholder="Person who referred you"></div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveEntry()">Save entry</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE = 'geowin_job_tracker_v1';
+let jobs = [];
+let currentTab = 'all';
+let editId = null;
+let formType = 'A';
+
+function load() {
+  try { jobs = JSON.parse(localStorage.getItem(STORE) || '[]'); } catch(e) { jobs = []; }
+  render();
+}
+function save() { localStorage.setItem(STORE, JSON.stringify(jobs)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function today() { return new Date().toISOString().slice(0,10); }
+function fmt(d) { if(!d) return '—'; const [y,m,dd] = d.split('-'); return `${dd}/${m}/${y}`; }
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+const statusBadge = {
+  'Applied': 'badge-Applied', 'Screening': 'badge-Screening', 'Interview': 'badge-Interview',
+  'Offer': 'badge-Offer', 'Rejected': 'badge-Rejected', 'Withdrawn': 'badge-Withdrawn',
+  'Awaiting referral': 'badge-Awaiting', 'Referral sent': 'badge-RefSent',
+  'Referral received': 'badge-RefReceived', 'No response': 'badge-NoResp', 'Declined': 'badge-Withdrawn'
+};
+
+function badge(text, cls) {
+  return `<span class="badge ${cls || statusBadge[text] || ''}">${text}</span>`;
+}
+
+function renderStats() {
+  const t = jobs.length;
+  const direct = jobs.filter(j => j.type === 'A').length;
+  const refs = jobs.filter(j => j.type === 'B').length;
+  const waiting = jobs.filter(j => j.refStatus === 'Awaiting referral').length;
+  const interviews = jobs.filter(j => j.status === 'Interview').length;
+  const offers = jobs.filter(j => j.status === 'Offer').length;
+  const active = jobs.filter(j => !['Rejected','Withdrawn'].includes(j.status)).length;
+  const respRate = t ? Math.round((active / t) * 100) : 0;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total applied</div>
+      <div class="stat-value" style="color:var(--text)">${t}</div>
+      <div class="stat-sub">all time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Resume A direct</div>
+      <div class="stat-value" style="color:var(--ra)">${direct}</div>
+      <div class="stat-sub">direct applications</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Resume B referral</div>
+      <div class="stat-value" style="color:var(--rb)">${refs}</div>
+      <div class="stat-sub">${waiting} awaiting</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Interviews</div>
+      <div class="stat-value" style="color:var(--amber)">${interviews}</div>
+      <div class="stat-sub">in progress</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Offers</div>
+      <div class="stat-value" style="color:var(--green)">${offers}</div>
+      <div class="stat-sub">received</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active rate</div>
+      <div class="stat-value" style="color:var(--teal)">${respRate}%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${respRate}%"></div></div>
+    </div>
+  `;
+}
+
+function setTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = el.dataset.tab;
+  render();
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterPortal').value = '';
+  render();
+}
+
+function render() {
+  renderStats();
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const fSt = document.getElementById('filterStatus').value;
+  const fP = document.getElementById('filterPortal').value;
+  const tod = today();
+
+  let filtered = jobs.filter(j => {
+    const ms = !search || [j.company,j.role,j.jobId,j.contact,j.referredBy,j.notes].some(v => (v||'').toLowerCase().includes(search));
+    const mSt = !fSt || j.status === fSt || j.refStatus === fSt;
+    const mP = !fP || j.portal === fP;
+    const mT = currentTab === 'all' ? true
+      : currentTab === 'direct' ? j.type === 'A'
+      : currentTab === 'referral' ? j.type === 'B'
+      : currentTab === 'waiting' ? j.refStatus === 'Awaiting referral'
+      : currentTab === 'followup' ? (j.followup && j.followup <= tod && !['Offer','Rejected','Withdrawn'].includes(j.status))
+      : true;
+    return ms && mSt && mP && mT;
+  });
+  filtered.sort((a,b) => (b.date||b.msgDate||'').localeCompare(a.date||a.msgDate||''));
+
+  const isRefTab = currentTab === 'referral' || currentTab === 'waiting';
+  const thead = document.getElementById('tableHead');
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+
+  if (isRefTab) {
+    thead.innerHTML = `<tr><th>Company</th><th>Role</th><th>Job ID</th><th>Contact</th><th>Designation</th><th>Referred by</th><th>Msg sent</th><th>Ref. status</th><th>App status</th><th>Follow-up</th><th>Notes</th><th></th></tr>`;
+  } else {
+    thead.innerHTML = `<tr><th>Type</th><th>Company</th><th>Role</th><th>Job ID</th><th>Portal</th><th>Applied</th><th>Status</th><th>Salary</th><th>Contact / Ref</th><th>Follow-up</th><th>Notes</th><th></th></tr>`;
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    empty.style.display = jobs.length === 0 ? 'block' : 'none';
+    if (jobs.length > 0) {
+      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--text2);">No results match your filters</td></tr>`;
+      empty.style.display = 'none';
+    }
+    return;
+  }
+  empty.style.display = 'none';
+
+  const companyCell = j => j.url
+    ? `<td class="td-company link-cell"><a href="${j.url}" target="_blank">${j.company}</a></td>`
+    : `<td class="td-company">${j.company}</td>`;
+
+  if (isRefTab) {
+    tbody.innerHTML = filtered.filter(j => j.type === 'B').map(j => {
+      const ov = j.followup && j.followup < tod && !['Offer','Rejected'].includes(j.status);
+      const contactCell = j.linkedIn
+        ? `<a href="${j.linkedIn}" target="_blank" style="color:var(--accent);text-decoration:none;">${j.contact||'—'}</a>`
+        : (j.contact || '—');
+      return `<tr>
+        ${companyCell(j)}
+        <td class="td-role" title="${j.role}">${j.role}</td>
+        <td class="td-jobid">${j.jobId||'—'}</td>
+        <td class="td-muted" style="white-space:nowrap;">${contactCell}</td>
+        <td class="td-muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${j.designation||''}">${j.designation||'—'}</td>
+        <td style="font-weight:500;white-space:nowrap;color:var(--teal);">${j.referredBy||'—'}</td>
+        <td class="td-muted">${fmt(j.msgDate)}</td>
+        <td>${badge(j.refStatus||'Awaiting referral')}</td>
+        <td>${j.status ? badge(j.status) : '<span class="td-muted">—</span>'}</td>
+        <td class="${ov?'overdue':'td-muted'}">${fmt(j.followup)}${ov?' ⚠':''}</td>
+        <td class="td-muted" style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${j.notes||''}">${j.notes||'—'}</td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editEntry('${j.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="delEntry('${j.id}')">Del</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  } else {
+    tbody.innerHTML = filtered.map(j => {
+      const ov = j.followup && j.followup < tod && !['Offer','Rejected','Withdrawn'].includes(j.status);
+      const contactDisplay = j.type === 'B'
+        ? (j.referredBy ? `<span style="color:var(--teal);font-size:11px;">Ref: <b>${j.referredBy}</b></span>` : (j.contact||'—'))
+        : (j.contact||'—');
+      return `<tr>
+        <td>${badge(j.type === 'A' ? 'A' : 'B', j.type === 'A' ? 'badge-A' : 'badge-B')}</td>
+        ${companyCell(j)}
+        <td class="td-role" title="${j.role}">${j.role}</td>
+        <td class="td-jobid">${j.jobId||'—'}</td>
+        <td class="td-muted">${j.portal||'—'}</td>
+        <td class="td-muted">${fmt(j.date)}</td>
+        <td>${badge(j.status||'Applied')}</td>
+        <td class="td-muted" style="text-align:center;">${j.salary ? '₹'+j.salary+'L' : '—'}</td>
+        <td class="td-muted" style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${contactDisplay}</td>
+        <td class="${ov?'overdue':'td-muted'}">${fmt(j.followup)}${ov?' ⚠':''}</td>
+        <td class="td-muted" style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${j.notes||''}">${j.notes||'—'}</td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editEntry('${j.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="delEntry('${j.id}')">Del</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function setType(type) {
+  formType = type;
+  document.getElementById('typeA').className = 'type-btn' + (type==='A' ? ' active-A' : '');
+  document.getElementById('typeB').className = 'type-btn' + (type==='B' ? ' active-B' : '');
+  document.getElementById('referralSection').style.display = type === 'B' ? 'block' : 'none';
+  const ss = document.getElementById('fStatus');
+  if (type === 'B') {
+    ss.innerHTML = '<option>Awaiting referral</option><option>Applied</option><option>Screening</option><option>Interview</option><option>Offer</option><option>Rejected</option><option>Withdrawn</option>';
+  } else {
+    ss.innerHTML = '<option>Applied</option><option>Screening</option><option>Interview</option><option>Offer</option><option>Rejected</option><option>Withdrawn</option>';
+  }
+}
+
+function openModal(id) {
+  editId = id || null;
+  document.getElementById('modalTitle').textContent = id ? 'Edit application' : 'Add application';
+  const tod = today();
+  if (id) {
+    const j = jobs.find(x => x.id === id);
+    if (!j) return;
+    setType(j.type || 'A');
+    document.getElementById('fCompany').value = j.company||'';
+    document.getElementById('fRole').value = j.role||'';
+    document.getElementById('fJobId').value = j.jobId||'';
+    document.getElementById('fUrl').value = j.url||'';
+    document.getElementById('fPortal').value = j.portal||'LinkedIn';
+    document.getElementById('fSalary').value = j.salary||'';
+    document.getElementById('fDate').value = j.date||tod;
+    document.getElementById('fStatus').value = j.status||'Applied';
+    document.getElementById('fFollowup').value = j.followup||'';
+    document.getElementById('fNotes').value = j.notes||'';
+    document.getElementById('fContact').value = j.contact||'';
+    document.getElementById('fDesignation').value = j.designation||'';
+    document.getElementById('fLinkedIn').value = j.linkedIn||'';
+    document.getElementById('fMsgDate').value = j.msgDate||'';
+    document.getElementById('fRefStatus').value = j.refStatus||'Awaiting referral';
+    document.getElementById('fReferredBy').value = j.referredBy||'';
+  } else {
+    setType(currentTab === 'referral' || currentTab === 'waiting' ? 'B' : 'A');
+    ['fCompany','fRole','fJobId','fUrl','fSalary','fFollowup','fNotes','fContact','fDesignation','fLinkedIn','fReferredBy'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('fPortal').value = 'LinkedIn';
+    document.getElementById('fDate').value = tod;
+    document.getElementById('fMsgDate').value = tod;
+    document.getElementById('fRefStatus').value = 'Awaiting referral';
+  }
+  document.getElementById('modalOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('fCompany').focus(), 80);
+}
+
+function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; editId = null; }
+function closeModalBg(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+function saveEntry() {
+  const company = document.getElementById('fCompany').value.trim();
+  const role = document.getElementById('fRole').value.trim();
+  if (!company || !role) { alert('Company and job title are required.'); return; }
+  const entry = {
+    id: editId || uid(), type: formType,
+    company, role,
+    jobId: document.getElementById('fJobId').value.trim(),
+    url: document.getElementById('fUrl').value.trim(),
+    portal: document.getElementById('fPortal').value,
+    salary: document.getElementById('fSalary').value,
+    date: document.getElementById('fDate').value,
+    status: document.getElementById('fStatus').value,
+    followup: document.getElementById('fFollowup').value,
+    notes: document.getElementById('fNotes').value.trim(),
+    contact: document.getElementById('fContact').value.trim(),
+    designation: document.getElementById('fDesignation').value.trim(),
+    linkedIn: document.getElementById('fLinkedIn').value.trim(),
+    msgDate: document.getElementById('fMsgDate').value,
+    refStatus: document.getElementById('fRefStatus').value,
+    referredBy: document.getElementById('fReferredBy').value.trim(),
+  };
+  if (editId) { const i = jobs.findIndex(x => x.id === editId); if (i > -1) jobs[i] = entry; }
+  else jobs.push(entry);
+  save(); render(); closeModal();
+  toast(editId ? 'Entry updated ✓' : 'Application added ✓');
+}
+
+function editEntry(id) { openModal(id); }
+
+function delEntry(id) {
+  if (!confirm('Remove this entry?')) return;
+  jobs = jobs.filter(x => x.id !== id);
+  save(); render();
+  toast('Entry removed');
+}
+
+function exportCSV() {
+  if (!jobs.length) { alert('No data to export.'); return; }
+  const h = ['Type','Company','Role','Job ID','Portal','Date Applied','Status','Salary LPA','Contact','Designation','LinkedIn','Referred By','Msg Sent','Referral Status','Follow-up','Job URL','Notes'];
+  const rows = jobs.map(j => [
+    j.type==='A'?'Resume A - Direct':'Resume B - Referral',
+    j.company,j.role,j.jobId,j.portal,j.date,j.status,j.salary,
+    j.contact,j.designation,j.linkedIn,j.referredBy,j.msgDate,j.refStatus,j.followup,j.url,j.notes
+  ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','));
+  const csv = [h.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'geowin_job_tracker_' + today() + '.csv';
+  a.click();
+  toast('CSV downloaded ✓');
+}
+
+load();
+</script>
+</body>
+</html>
